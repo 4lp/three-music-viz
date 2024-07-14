@@ -14,7 +14,10 @@
 
 <script lang="ts" setup>
 import { useDropzone } from "vue3-dropzone"
+import { ref, onMounted } from 'vue'
 import VizualizerScreen from "./VizualizerScreen.vue"
+
+let isPlaying = ref(false)
 
 // dropzone
 function onDrop(acceptFiles, rejectReasons) {
@@ -33,28 +36,49 @@ function onDrop(acceptFiles, rejectReasons) {
     onRead(evt.target.result)
   }
 }
+const { getRootProps, getInputProps } = useDropzone({ onDrop })
 // convert audio file to array buffer
 function onRead(arrayBuffer) {
   console.log(arrayBuffer)
   audioCtx.decodeAudioData(arrayBuffer).then((buffer) => {
     console.log(buffer)
-    const source = audioCtx.createBufferSource()
+    const audio = document.getElementById('main-playback') as HTMLAudioElement
+    const source = audioCtx.createMediaElementSource(audio)
     source.buffer = buffer
     source.connect(analyser)
-    analyser.connect(audioCtx.destination)
-    //source.start()
+    analyser.connect(audioCtx.destination)  
   })
 }
-const { getRootProps, getInputProps } = useDropzone({ onDrop })
+// audio playback
+
+onMounted(() => {
+  const audio = document.getElementById('main-playback') as HTMLAudioElement
+    audio.addEventListener('play', () => {
+    isPlaying.value = true
+    draw()
+  })
+  audio.addEventListener('pause', () => {
+    isPlaying.value = false
+    cancelAnimationFrame(draw)
+  })
+})
+
 // audio analyser
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)()
-
 const analyser = audioCtx.createAnalyser()
 analyser.fftSize = 2048
-
 const bufferLength = analyser.frequencyBinCount
 const dataArray = new Uint8Array(bufferLength)
 analyser.getByteTimeDomainData(dataArray)
+
+function draw() {
+  if (!isPlaying.value) {
+    return
+  }
+  requestAnimationFrame(draw)
+  analyser.getByteTimeDomainData(dataArray)
+  console.log(dataArray)
+}
 
 </script>
 

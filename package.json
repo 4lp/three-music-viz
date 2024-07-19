@@ -17,6 +17,8 @@
   },
   "dependencies": {
     "@tresjs/core": "^4.2.0",
+    "@tresjs/post-processing": "^0.7.1",
+    "dat.gui": "^0.7.9",
     "pinia": "^2.1.7",
     "three": "^0.166.1",
     "vue": "^3.4.29",
